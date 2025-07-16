@@ -36,6 +36,10 @@ func main() {
 
 	// Inicializar repositórios
 	userRepository := persistence.NewPostgresUserRepository(db)
+	shoppingListRepository := persistence.NewPostgresShoppingListRepository(db)
+	listItemRepository := persistence.NewPostgresListItemRepository(db)
+	categoryRepository := persistence.NewPostgresCategoryRepository(db)
+	tipRepository := persistence.NewPostgresTipRepository(db)
 
 	// Inicializar serviços
 	jwtService := service.NewJWTService(jwtSecret, jwtIssuer)
@@ -43,16 +47,32 @@ func main() {
 	// Inicializar casos de uso
 	authUseCase := usecase.NewAuthUseCase(userRepository, jwtService)
 	userUseCase := usecase.NewUserUseCase(userRepository)
+	shoppingListUseCase := usecase.NewShoppingListUseCase(shoppingListRepository)
+	listItemUseCase := usecase.NewListItemUseCase(listItemRepository)
+	categoryUseCase := usecase.NewCategoryUseCase(categoryRepository)
+	tipUseCase := usecase.NewTipUseCase(tipRepository)
 
 	// Inicializar handlers
 	authHandler := handler.NewAuthHandler(authUseCase)
 	userHandler := handler.NewUserHandler(userUseCase)
+	shoppingListHandler := handler.NewShoppingListHandler(shoppingListUseCase)
+	listItemHandler := handler.NewListItemHandler(listItemUseCase)
+	categoryHandler := handler.NewCategoryHandler(categoryUseCase)
+	tipHandler := handler.NewTipHandler(tipUseCase)
 
 	// Inicializar middlewares
 	authMiddleware := middleware.NewAuthMiddleware(jwtService)
 
 	// Configurar router
-	router := api.NewRouter(authHandler, userHandler, authMiddleware)
+	router := api.NewRouter(
+		authHandler,
+		userHandler,
+		authMiddleware,
+		shoppingListHandler,
+		listItemHandler,
+		categoryHandler,
+		tipHandler,
+	)
 	handler := router.Setup()
 
 	// Configurar servidor HTTP
